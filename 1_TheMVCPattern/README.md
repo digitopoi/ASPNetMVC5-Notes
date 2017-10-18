@@ -187,3 +187,130 @@ Lets you configure the lifecycle of a component, allowing you to select from pre
   5. etc.
 
 ## Getting Started with Automated Testing
+
+ASP.NET MVC is designed to make it as easy as possible to set up automated tests and use **Test Driven Development** (TDD)
+
+### Two primary kinds:
+  1. **unit testing** - a way to specify and verify the behavior of individual classes (or other small units of code) in isolation from the rest of the application.
+  
+  2. **integration testing** - a way to specify and verify the behavior of multiple components working together, including the entire application
+
+### Understanding Unit Testing
+
+You create a separate test project in your Visual Studio solution to hold test fixtures
+
+**test fixtures**- C# class that defines a set of test methods - one method for each behavior you want to verify.
+
+EXAMPLE:
+```c#
+using System.Web.Mvc;
+
+namespace TestingDemo
+{
+    public class AdminController : Controller
+    {
+        private IUserRepository repository;
+
+        public AdminController(IUserRepository repo)
+        {
+            repository = repo;
+        }
+
+        public ActionResult ChangeLoginName(string oldName, string newName)
+        {
+            User user = respository.FetchByLoginName(oldName);
+            user.LoginName = newName;
+            respository.SubmitChanges();
+            //  render some view to show the result
+            return View();
+        }
+    }
+}
+```
+
+```c#
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace TestingDemo.Tests
+{
+    [TestClass]
+    public class AdminControllerTests
+    {
+        [TestMethod]
+        public void CanChangeLoginName() 
+        {
+            //  ARRANGE (set up a scenario)
+            User user = new User() { LoginName = "Bob" };
+            FakeRepository respositoryParam = new FakeRepository();
+            repositoryParam.Add(user);
+            AdminController target = new AdminController(repositoryParam);
+            string oldLoginParam = user.LoginName;
+            string newLoginParam = "Joe";
+
+            //  ACT (attempt the operation)
+            target.ChangeLoginName(oldLoginParam, newLoginParam);
+
+            //  ASSERT (verify the result)
+            Assert.AreEqual(newLoginParam, user.LoginName);
+            Assert.IsTrue(repositoryParam.DidSubmitChanges);
+        } 
+    }
+
+    class FakeRepository : IUserRepository
+    {
+        public List<User> Users = new List<User>();
+        public bool DidSubmitChanges = false;
+
+        public void Add(User user)
+        {
+            Users.Add(user);
+        }
+
+        public User FetchByLoginName(string loginName)
+        {
+            return Users.First(m => m.LoginName == loginName)
+        }
+
+        public void SubmitChanges()
+        {
+            DidSubmitChanges = true;
+        }
+    }
+}
+```
+
+### Arrange, Act, Assert
+  1. Arrange - setting up conditions for the test
+
+  2. Act - performing the test
+
+  3. Assert - verifying that the result was the one that was required
+
+### Using TDD and the Red-Green-Refactor Workflow
+
+  - Determine that you need to add a new feature or method to your application
+
+  - Write the test that will validate the behavior of the new feature when it is written.
+
+  - Run the test and get a red light.
+
+  - Write the code that implements the new feature
+
+  - Run the test again and correct the code until you get a green light
+
+  - Refactor the code if required. For example, reorganize the statements, rename the variables, and so on.
+
+  - Run the test to confirm that your changes have not changed the behavior of your additions.
+
+### Understanding Integration Testing
+
+The most common approach to integration testing for web applications is UI automation
+
+**UI automation**- simulating a Web browser to exercise the application's entire technology stack by reproducing the actions that a user would perform (pressing buttons, following links, submitting forms, etc.)
+
+#### Two best known browser automation options used by .NET developers:
+  1. Selenium
+  2. WatiN
+
