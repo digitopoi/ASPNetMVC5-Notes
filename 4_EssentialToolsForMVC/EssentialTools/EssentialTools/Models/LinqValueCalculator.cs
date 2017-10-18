@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace EssentialTools.Models
 {
-    public class LinqValueCalculator
+    public class LinqValueCalculator : IValueCalculator
     {
         public decimal ValueProducts (IEnumerable<Product> products)
         {
