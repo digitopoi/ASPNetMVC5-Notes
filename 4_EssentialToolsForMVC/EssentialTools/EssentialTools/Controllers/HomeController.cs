@@ -1,6 +1,6 @@
-﻿using System.Linq;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 using EssentialTools.Models;
+using Ninject;
 
 namespace EssentialTools.Controllers
 {
@@ -17,7 +17,10 @@ namespace EssentialTools.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            IValueCalculator calc = new LinqValueCalculator();
+            IKernel ninjectKernel = new StandardKernel();
+            ninjectKernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
+
+            IValueCalculator calc = ninjectKernel.Get<IValueCalculator>();
 
             ShoppingCart cart = new ShoppingCart(calc) { Products = products };
 
