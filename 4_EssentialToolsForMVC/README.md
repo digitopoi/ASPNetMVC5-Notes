@@ -68,5 +68,62 @@ Not a problem in such a small application, but in a larger one it would cause pr
 
 Part of the problem can be solved by using a C# interface to abstract the definition of the calculator functionality from its implementation.
 
+I can solve this by implementing a C# interface to abstract the definition of the calculator functionality from its implementation:
+
+IValueCalculator.cs
+```c#
+public interface IValueCalculator
+{
+    decimal ValueProducts(IEnumerable<Product> products);
+}
+```
+
+This interface can then be implemented in the LinqValueCalculator class:
+
+LinqValueCalculator.cs
+```c#
+public class LinqValueCalculator : IValueCalculator
+{
+  ...
+}
+```
+
+The interface allows me to break the tight coupling between ShoppingCart and LinqValueCalculator
+
+ShoppingCart.cs
+```c#
+public class ShoppingCart 
+{
+  private IValueCalculator calc;
+
+  public ShoppingCart(IValueCalculator calcParam)
+  {
+    calc = calcParam;
+  }
+
+  ...
+}
+```
+
+C# still requires me to specify the implementation class for an interface during instantiation
+
+I still have a problem in the HomeController:
+
+HomeController.cs
+```c#
+public ActionResult Index()
+{
+  IValueCalculator calc = new LinqValueCalculator();
+
+  ...
+
+}
+```
+
+I now need to use Ninject to reach the point where I can specify that I want to instantiate an implementation of the IValueCalculator interface, but the details of which implementation is required are not part of the code in the HomeController.
+
+Need to tell Ninject that LinqValueCalculator is the implementation of IValueCalculator interface and update HomeController class so that it obtains its objects via Ninject, rather than by using the *new* keyword.
+
+## Adding Ninject to the Visual Studio Project
 
 
