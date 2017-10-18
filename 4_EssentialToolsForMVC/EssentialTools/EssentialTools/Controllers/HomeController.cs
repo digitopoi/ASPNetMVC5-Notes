@@ -24,11 +24,6 @@ namespace EssentialTools.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            IKernel ninjectKernel = new StandardKernel();
-            ninjectKernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
-
-            IValueCalculator calc = ninjectKernel.Get<IValueCalculator>();
-
             ShoppingCart cart = new ShoppingCart(calc) { Products = products };
 
             decimal totalValue = cart.CalculateProductTotal();
