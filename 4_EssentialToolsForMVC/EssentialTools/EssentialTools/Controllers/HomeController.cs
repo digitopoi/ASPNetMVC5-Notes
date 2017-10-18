@@ -17,7 +17,7 @@ namespace EssentialTools.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            ILinqValueCalculator calc = new LinqValueCalculator();
+            IValueCalculator calc = new LinqValueCalculator();
 
             ShoppingCart cart = new ShoppingCart(calc) { Products = products };
 
