@@ -99,6 +99,7 @@
     </Compile>
     <Compile Include="Models\LinqValueCalculator.cs" />
     <Compile Include="Models\Product.cs" />
+    <Compile Include="Models\ShoppingCart.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
