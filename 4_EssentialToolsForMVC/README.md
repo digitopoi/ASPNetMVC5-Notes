@@ -391,3 +391,50 @@ public class DefaultDiscountHelper : IDiscountHelper
   }
 }
 ```
+
+When telling Ninject which classes to use for an interface, you can use the WithPropertyValue() method to set the value for the DiscountSize property in the DefaultDiscountHelper class.
+
+You don't need to change any other binding or change the way you use the Get() method to obtain an instance of the ShoppingCart class.
+
+The property value is set following construction of the DefaultDiscountHelper class, and has the effect of halving the total value of the items.
+
+NinjectDependencyResolver.cs
+```c#
+private void AddBindings()
+{
+  kernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
+  kernel.Bind<IDiscountHelper>()
+    .To<DefaultDiscountHelper>().WithPropertyValue("DiscountSize", 50M);
+}
+```
+
+If you have more than one property value you need to set, you can chain calls to the WithPropertyValue method to cover them all. You can also do it with constructor parameters.
+
+Discount.cs
+```c#
+public class DefaultDiscountHelper : IDiscountHelper
+{
+  public decimal discountSize;
+}
+
+public DefaultDiscountHelper(decimal discountParam)
+{
+  discountSize = discountParam;
+}
+
+public decimal ApplyDiscount(decimal totalParam)
+{
+  return (totalParam - (discountSize / 100m * totalParam));
+}
+```
+
+To bind this class to Ninject, you need to specify the value of the constructor parameter using the WithConstructorArgument() method in the AddBindings method:
+
+```c#
+private void AddBindings()
+{
+  kernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
+  kernel.Bind<IDiscountHelper>()
+    .To<DefaultDiscountHelper>().WithConstructorArgument("discountParam", 50M);
+}
+```
