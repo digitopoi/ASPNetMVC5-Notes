@@ -360,3 +360,34 @@ private void AddBindings()
   kernel.Bind<IDiscountHelper>().To<DefaultDiscountHelper>();       //  <====
 }
 ```
+
+### Dependency chain has now been created:
+
+- HomeController depends on the IValueCalculator interface
+- Resolved using the LinqValueCalculator class
+- The LinqValueCalculator class depends on the IDiscountHelper interface
+- Resolved using the DefaultDiscountHelper class
+
+## Specifying Property and Constructor Parameter Values
+
+You can configure the objects that Ninject creates by providing details of values you want applied to properties when you bind the interface to its implementation.
+
+To demonstrate - DefaultDiscountHelper is revised so that it defines a DiscountSize property:
+
+Discount.cs
+```c#
+public interface IDiscountHelper
+{
+  decimal ApplyDiscount(decimal totalParam);
+}
+
+public class DefaultDiscountHelper : IDiscountHelper
+{
+  public decimal DiscountSize { get; set; }
+
+  public decimal ApplyDiscount(decimal totalParam)
+  {
+    return (totalParam - (DiscountSize / 100m * totalParam));
+  }
+}
+```
