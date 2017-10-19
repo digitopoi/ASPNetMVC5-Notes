@@ -438,3 +438,110 @@ private void AddBindings()
     .To<DefaultDiscountHelper>().WithConstructorArgument("discountParam", 50M);
 }
 ```
+
+## Using Conditional Binding
+
+Ninject supports conditional binding that allows you to specify which classes the kernel should use to respond for particular interfaces.
+
+FlexibleDiscountHelper applies different discounts based on the magnitude of the total. 
+
+FlexibleDiscountHelper.cs
+```c#
+public class FlexibleDiscountHelper : IDiscountHelper
+{
+  public decimal ApplyDiscount(decimal totalParam)
+  {
+    decimal discount = totalParam > 100 ? 70 : 25;
+    return (totalParam - (discount / 100m * totalParam));
+  }
+}
+```
+
+Now I have a choice of classes that implement IDiscountHelper interface, and I can modify AddBindings() method to tell Ninject I want to use each of them:
+
+NinjectDependencyResolver.cs
+```c#
+private void AddBindings()
+{
+  kernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
+  kernel.Bind<IDiscountHelper>()
+    .To<DefaultDiscountHelper>().WithConstructorArgument("discountParam", 50M);
+  kernel.Bind<IDiscountHelper>().To<FlexibleDiscountHelper>()
+    .WhenInjectedInto<LinqValueCalculator>();
+}
+```
+
+The new binding specifies that the Ninject kernel should use the FlexibleDiscountHelper class as the implementation of the IDiscountHelper interface when it is creating a LinqValueCalculator object.
+
+The original binding for IDiscountHelper is still in place.
+
+Ninject tries to find the best match and it helps to have a default binding for the same class or interface, so that Ninject has a fallback if the criteria for a conditional binding are not satisfied.
+
+### Other Conditional Binding Methods:
+
+Helps tailor the lifecycle of the objects that Ninject creates to match the needs of your applications.
+
+By default, Ninject will create a new instance of every object needed to resolve every dependency each time you request an object.
+
+Modify LinqValueCalculator output a message whenever a new instance is created:
+
+LinqValueCalculator.cs
+```c#
+public class LinqValueCalculator : IValueCalculator
+{
+  private IDiscountHelper discounter;
+  private static int counter = 0;
+  
+  public LinqValueCalculator(IDiscountHelper discountParam)
+  {
+    discounter = discountParam;
+
+    System.Diagnostics.Debug.WriteLine(
+      string.Format("Instance {0} created", ++counter));
+  }
+
+  ...
+}
+```
+
+The System.Diagnostics.Debug class contains a number of methods that can be used to write out debugging messages.
+
+[This wasn't working for me?]
+
+## Scope
+
+For some classes you will want to share a single instance throughout the entire application and for others you will want to create a new instance each HTTP request received.
+
+Ninject lets you control the lifecycle of the objects you create using **scope**
+
+Scope is expressed using a method call when setting up the binding between an interface and its implementation type.
+
+Using request scope:
+
+NinjectDependencyResolver.cs
+```c#
+...
+using Ninject.Web.Common;
+
+...
+
+private void AddBindings()
+{
+  kernel.Bind<IValueCalculator>().To<LinqValueCalculator>().InRequestScope();
+
+  ...
+}
+```
+
+InRequestScope() tells Ninject that it should only create one instance of the LinqValueCalculator class for each HTTP request that ASP.NET receives.
+
+Each request will get its own separate object, but have multiple dependencies resolved with the same instance of the class.
+
+### Ninject Scope Methods
+
+|Name                        | Effect                                      |
+| -------------------------- | ------------------------------------------- |
+| InTransientScope()         | This is the same as not specifying a scope and creates a new object for each dependency that is resolved |
+| InSingletonScope()         | Creates a single instance which is shared throughout the application. |
+| InThreadScope()            | Creates a single instance which is used to resolve dependencies for objects requested by a single thread |
+| InRequestScope()            | Creates a single instance which is used to resolve dependencies for objects requested by a single HTTP request |
