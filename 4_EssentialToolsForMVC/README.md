@@ -545,3 +545,6 @@ Each request will get its own separate object, but have multiple dependencies re
 | InSingletonScope()         | Creates a single instance which is shared throughout the application. |
 | InThreadScope()            | Creates a single instance which is used to resolve dependencies for objects requested by a single thread |
 | InRequestScope()            | Creates a single instance which is used to resolve dependencies for objects requested by a single HTTP request |
+
+
+
