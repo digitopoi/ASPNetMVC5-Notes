@@ -252,7 +252,7 @@ The final step is to refactor the HomeController so that it takes advantage of t
 
 The main change is to add a class constructor that accepts and implementation of the IValueCalculator interface. Ninject will provide an object that implements the interface when it creates an instance of the controller, using the configuration setup in the NinjectDependencyResolver class.
 
-
+Finally, any mention of Ninject or the LinqValueCalculator is removed from the controller.
 
 ```c#
 public class HomeController : Controller
@@ -284,5 +284,64 @@ public class HomeController : Controller
 }
 ```
 
+## What happens when you run the application:
 
+1. The MVC Framework received the request and figured out that the request is intended for the HomeController
 
+2. The MVC Framework asked the custom dependency resolver class to create a new instance of the HomeController class, specifying the class using the Type parameter of the GetService() method.
+
+3. The dependency resolver asked Ninject to create a new HomeController class, passing on the Type object to the TryGet() method.
+
+4. Ninject inspected the HomeController constructor and found that it has declared a dependency on the IValueCalculator interface, for which it has a binding.
+
+5. Ninject creates an instance of the LinqValueCalculator class and uses it to create a new instance of the HomeController class.
+
+6. Ninject passes the HomeController instance to the custom dependency resolver, which returns it to the MVC Framework. The MVC Framework uses the controller instance to service the request.
+
+* Now, I only have to modify the dependency resolver class when I want to replace the LinqValueCalculator with another implementation, because this is the only place where I have to specify the implementation used to satisfy dependencies on the IValueCalculator interface.
+
+## Creating Chains of Dependency 
+
+When you ask Ninject to create a type, it examines the dependencies that the type has declared.
+
+It also looks to see if they rely on other types - or declare their own dependencies.
+
+If there are additional dependencies - Ninject automatically resolved them and creates instances of all classes that are required along the chain of dependencies.
+
+Adding another interface and class that implements it:
+
+Discount.cs
+```c#
+public interface IDiscountHelper 
+{
+  decimal ApplyDiscount(decimal totalParam);
+}
+
+public class DefaultDiscountHelper : IDiscountHelper
+{
+  public decimal ApplyDiscount(decimal totalParam)
+  {
+    return (totalParam - (10m / 100m * totalParam));
+  }
+}
+```
+
+Adding dependency:
+
+LinqValueCalculator.cs
+```c#
+public class LinqValueCalculator : IValueCalculator
+{
+  private IDiscountHelper discounter;
+
+  public LinqValueCalculator(IDiscountHelper discountParam)
+  {
+    discounter = discountParam;
+  }
+
+  public decimal ValueProducts(IEnumerable<Product> products)
+  {
+    return discounter.ApplyDiscount(products.Sum(p => p.Price));
+  }
+}
+```
