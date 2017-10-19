@@ -328,20 +328,35 @@ public class DefaultDiscountHelper : IDiscountHelper
 
 Adding dependency:
 
+The new constructor [1] declares a dependency on the IDiscountHelper interface.
+
+The implementation object that the constructor receives is assigned to a field and uses it in the ValueProducts method to apply a discount to the cumulative values of the Product objects. [2]
+
 LinqValueCalculator.cs
 ```c#
 public class LinqValueCalculator : IValueCalculator
 {
   private IDiscountHelper discounter;
 
-  public LinqValueCalculator(IDiscountHelper discountParam)
+  public LinqValueCalculator(IDiscountHelper discountParam)         //  [1]
   {
     discounter = discountParam;
   }
 
   public decimal ValueProducts(IEnumerable<Product> products)
   {
-    return discounter.ApplyDiscount(products.Sum(p => p.Price));
+    return discounter.ApplyDiscount(products.Sum(p => p.Price));    //  [2]
   }
+}
+```
+
+The next step is to bind the IDiscountHelper interface to the implementation class with the Ninject kernel in the NinjectDependencyResolver class.
+
+NinjectDependencyResolver.cs
+```c#
+private void AddBindings()
+{
+  kernel.Bind<IValueCalculator>().To<LinqValueCalculator>();
+  kernel.Bind<IDiscountHelper>().To<DefaultDiscountHelper>();       //  <====
 }
 ```
